@@ -15,7 +15,9 @@ func ParseTitle(r io.Reader) (title string) {
 	var traverse func(*html.Node) bool
 	traverse = func(n *html.Node) bool {
 		if n.Type == html.ElementNode && n.Data == "title" {
-			title = n.FirstChild.Data
+			if n.FirstChild != nil {
+				title = n.FirstChild.Data
+			}
 			return false
 		}
 		for c := n.FirstChild; c != nil; c = c.NextSibling {

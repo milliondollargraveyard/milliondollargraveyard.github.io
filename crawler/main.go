@@ -78,13 +78,13 @@ func main() {
 			log.Printf("[%d] Processing %s", i, s.Href)
 
 			resp, err := client.Get(s.Href)
-			s.Response.Status = resp.StatusCode
-			if resp.ContentLength >= 0 {
-				s.Response.Size = resp.ContentLength
-			}
 			if err != nil {
 				s.Response.Error = err.Error()
 			} else {
+				s.Response.Status = resp.StatusCode
+				if resp.ContentLength >= 0 {
+					s.Response.Size = resp.ContentLength
+				}
 				s.Response.Title = ParseTitle(resp.Body)
 				resp.Body.Close()
 			}
