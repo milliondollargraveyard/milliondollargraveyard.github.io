@@ -1,0 +1,43 @@
+<html>
+<head>
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+
+<style>
+.grid {
+  position: relative;
+  width: 1000;
+  height: 1000;
+}
+.grid:after {
+  content : "";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-image: url('img/image-map.png'); 
+  width: 100%;
+  height: 100%;
+  opacity : 0.2;
+  z-index: -1;
+}
+svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+</style>
+
+</head>
+<h1>Graveyard</h1>
+
+<div class='grid'>
+  <svg width='1000' height='1000'>
+  </svg>
+</div>
+
+<script src="js/graveyard.js"></script>
+</html>
