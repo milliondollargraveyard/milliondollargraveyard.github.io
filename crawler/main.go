@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -22,19 +23,38 @@ type Site struct {
 	} `json:"response,omitempty"`
 }
 
-var skip = flag.Int("skip", 0, "skip this many lines before processing")
+var skip = flag.Uint("skip", 0, "skip this many lines before processing")
 var limit = flag.Int("limit", -1, "abort after processing this many lines")
+var concurrency = flag.Uint("c", 1, "concurrency")
 
 func main() {
 	flag.Parse()
 
 	// Read a JSON per line
 	dec := json.NewDecoder(os.Stdin)
-	enc := json.NewEncoder(os.Stdout)
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	var i int
+	if *concurrency < 1 {
+		*concurrency = 1
+	}
+	workers := make(chan struct{}, *concurrency)
+	results := make(chan Site)
+	wait := sync.WaitGroup{}
+
+	go func() {
+		// Writer
+		enc := json.NewEncoder(os.Stdout)
+
+		for s := range results {
+			if err := enc.Encode(&s); err != nil {
+				log.Fatalf("encode failed: %s", err)
+			}
+			wait.Done()
+		}
+	}()
+
+	var i uint
 	var s Site
 	for {
 		i++
@@ -42,7 +62,7 @@ func main() {
 		if i < *skip {
 			continue
 		}
-		if *limit > 0 && *limit <= i-*skip {
+		if *limit > 0 && uint(*limit) <= i-*skip {
 			break
 		}
 
@@ -52,24 +72,29 @@ func main() {
 			log.Fatalf("decode failed on line %d: %s", i, err)
 		}
 
-		log.Printf("[%d] Processing %s", i, s.Href)
+		workers <- struct{}{}
+		go func(s Site) {
+			wait.Add(1)
+			log.Printf("[%d] Processing %s", i, s.Href)
 
-		resp, err := client.Get(s.Href)
-		s.Response.Status = resp.StatusCode
-		if resp.ContentLength >= 0 {
-			s.Response.Size = resp.ContentLength
-		}
-		if err != nil {
-			s.Response.Error = err.Error()
-		} else {
-			s.Response.Title = ParseTitle(resp.Body)
-			resp.Body.Close()
-		}
+			resp, err := client.Get(s.Href)
+			s.Response.Status = resp.StatusCode
+			if resp.ContentLength >= 0 {
+				s.Response.Size = resp.ContentLength
+			}
+			if err != nil {
+				s.Response.Error = err.Error()
+			} else {
+				s.Response.Title = ParseTitle(resp.Body)
+				resp.Body.Close()
+			}
 
-		if err := enc.Encode(&s); err != nil {
-			log.Fatalf("encode failed on line %d: %s", i, err)
-		}
+			results <- s
+			<-workers
+		}(s)
 	}
 
-	log.Printf("done after line %d", i)
+	log.Printf("shutting down after line %d", i)
+	wait.Wait()
+	close(results)
 }
