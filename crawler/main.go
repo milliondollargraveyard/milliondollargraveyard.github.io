@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -21,12 +23,27 @@ type Site struct {
 		Size       int64  `json:"size,omitempty"`
 		Title      string `json:"title,omitempty"`
 		Redirected string `json:"redirected,omitempty"`
+		Squatter   bool   `json:"squatter,omitempty"`
 	} `json:"response,omitempty"`
+}
+
+// Records returns a CSV-compatible flat output
+func (s *Site) Records() []string {
+	return []string{
+		s.Href, s.Coords, s.Title,
+		fmt.Sprintf("%d", s.Response.Status),
+		s.Response.Error,
+		fmt.Sprintf("%d", s.Response.Size),
+		s.Response.Title,
+		s.Response.Redirected,
+		fmt.Sprintf("%t", s.Response.Squatter),
+	}
 }
 
 var skip = flag.Int("skip", 0, "skip this many lines before processing")
 var limit = flag.Int("limit", -1, "abort after processing this many lines")
 var concurrency = flag.Int("c", 1, "concurrency")
+var exportCSV = flag.Bool("csv", false, "export in csv format")
 
 const maxReadSize = 262144
 
@@ -34,7 +51,14 @@ func main() {
 	flag.Parse()
 
 	// Read a JSON per line
-	dec := json.NewDecoder(os.Stdin)
+	var dec = json.NewDecoder(os.Stdin)
+	var enc Encoder
+
+	if *exportCSV {
+		enc = &CSVEncoder{csv.NewWriter(os.Stdout)}
+	} else {
+		enc = json.NewEncoder(os.Stdout)
+	}
 
 	client := &http.Client{
 		Timeout: 10 * time.Second,
@@ -53,8 +77,6 @@ func main() {
 
 	go func() {
 		// Writer
-		enc := json.NewEncoder(os.Stdout)
-
 		for s := range results {
 			if err := enc.Encode(&s); err != nil {
 				log.Fatalf("encode failed: %s", err)
@@ -88,36 +110,7 @@ func main() {
 			wait.Add(1)
 			log.Printf("[%d] Processing %s", i, s.Href)
 
-			resp, err := client.Get(s.Href)
-			if err != nil {
-				s.Response.Error = err.Error()
-			} else {
-				s.Response.Status = resp.StatusCode
-				if resp.ContentLength >= 0 {
-					s.Response.Size = resp.ContentLength
-				}
-				url := resp.Request.URL.String()
-				if url != s.Href {
-					s.Response.Redirected = url
-				}
-				readcount := &ReaderCounter{Reader: resp.Body}
-				s.Response.Title = ParseTitle(readcount)
-				if s.Response.Redirected == "" && s.Response.Size == 0 {
-					// Consume the body until completion to measure the body
-					for {
-						if _, err := readcount.Read(nil); err == io.EOF {
-							break
-						}
-						if readcount.Count() > maxReadSize {
-							break
-						}
-					}
-					s.Response.Size = int64(readcount.Count())
-				}
-				resp.Body.Close()
-			}
-
-			results <- s
+			results <- process(client, s)
 			<-workers
 		}(s)
 	}
@@ -125,4 +118,48 @@ func main() {
 	log.Printf("shutting down after line %d", i)
 	wait.Wait()
 	close(results)
+}
+
+// process takes a Site query and returns an augmented Site
+func process(client *http.Client, s Site) Site {
+	resp, err := client.Get(s.Href)
+	if err != nil {
+		s.Response.Error = err.Error()
+		return s
+	}
+	defer resp.Body.Close()
+
+	// Fill in the response
+	s.Response.Status = resp.StatusCode
+	if resp.ContentLength >= 0 {
+		s.Response.Size = resp.ContentLength
+	}
+
+	// Is it a redirect?
+	url := resp.Request.URL.String()
+	if url != s.Href {
+		s.Response.Redirected = url
+	}
+
+	// What's in the body?
+	readcount := &CountingReader{Reader: resp.Body}
+	parsed := ParseHTML(readcount)
+	s.Response.Title = parsed.Title
+	s.Response.Squatter = parsed.MentionsDomain
+
+	// Should we try to guess the content size?
+	if s.Response.Redirected == "" && s.Response.Size == 0 {
+		// Consume the body until completion to measure the body
+		for {
+			if _, err := readcount.Read(nil); err == io.EOF {
+				break
+			}
+			if readcount.Count() > maxReadSize {
+				break
+			}
+		}
+		s.Response.Size = int64(readcount.Count())
+	}
+
+	return s
 }
