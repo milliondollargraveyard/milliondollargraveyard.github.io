@@ -12,7 +12,10 @@ function changeFacet(facet) {
 }
 
 function colourByFilter(d) {
-  if (activeFacet == 'cost') {
+  if (activeFacet == 'none') {
+    return 'rgba(0,0,0,0)'
+
+  } else if (activeFacet == 'cost') {
     width = d.coords.split(",")[2] - d.coords.split(",")[0];
     height = d.coords.split(",")[3] - d.coords.split(",")[1];
     size = width * height;
@@ -62,7 +65,9 @@ function updateData(data) {
     .append('rect')
     .merge(rect)
       .on('mouseover', function(d) {
-        console.log(d)
+        $('.tooltip .header').text(d.title);
+        $('.tooltip .description a').text(d.href);
+        $('.tooltip .description a').attr('href', d.href);
       })
       .attr('x', function(d) { return d.coords.split(",")[0]; })
       .attr('x', function(d) { return d.coords.split(",")[0]; })

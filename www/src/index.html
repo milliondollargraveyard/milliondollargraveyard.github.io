@@ -5,54 +5,59 @@
   integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
   crossorigin="anonymous"></script>
 <script src="https://d3js.org/d3.v4.min.js"></script>
-<link rel="stylesheet" type="text/css" href="../css/semantic.min.css">
 
-<style>
-.grid {
-  position: relative;
-  width: 1000;
-  height: 1000;
-}
-.grid:after {
-  content : "";
-  display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
-  background-image: url('img/image-map.png'); 
-  filter: grayscale(100%);
-  width: 100%;
-  height: 100%;
-  opacity : 0.5;
-  z-index: -1;
-}
-svg {
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-rect {
-  opacity: 0.8;
-}
-</style>
+<link rel="stylesheet" type="text/css" href="../css/semantic.min.css">
+<link rel="stylesheet" type="text/css" href="../css/style.css">
 
 </head>
 
 <body>
-  <div class='ui container'>
+  <div class='container'>
     <h1>Graveyard</h1>
 
-    <div class="ui buttons">
-      <button class="ui button" onclick='changeFacet("cost")'>Cost</button>
-      <button class="ui button" onclick='changeFacet("registration")'>Registration</button>
-      <button class="ui button" onclick='changeFacet("domain")'>Domain</button>
-      <button class="ui button" onclick='changeFacet("content")'>Content</button>
+
+    <div class='visualization'>
+      <sidebar>
+
+        <div class="ui vertical menu fluid">
+          <a class="active item" onclick='changeFacet("none")'>
+            <h4 class="ui header">Original</h4>
+            <p>What did the ad look like?</p>
+          </a>
+          <a class="active item" onclick='changeFacet("cost")'>
+            <h4 class="ui header">Cost</h4>
+            <p>How much did each ad cost?</p>
+          </a>
+          <a class="item" onclick='changeFacet("registration")'>
+            <h4 class="ui header">Registration</h4>
+            <p>What's the purchasing status of each ad?</p>
+          </a>
+          <a class="item" onclick='changeFacet("domain")'>
+            <h4 class="ui header">Domain</h4>
+            <p>What's on the domain of ad now?</p>
+          </a>
+          <a class="item" onclick='changeFacet("content")'>
+            <h4 class="ui header">Content</h4>
+            <p>Did the ad's content survive?</p>
+          </a>
+        </div>
+
+        <div class="ui tooltip fluid card">
+          <div class="content">
+            <div class="header">Title</div>
+            <div class="description">
+              <a href=''></a>
+            </div>
+          </div>
+        </div>
+      </sidebar>
+    
+      <div class='ad-grid'>
+        <svg width='1000' height='1000'>
+        </svg>
+      </div>
     </div>
 
-    <div class='grid'>
-      <svg width='1000' height='1000'>
-      </svg>
-    </div>
   </div>
 
 <script src="js/graveyard.js"></script>
