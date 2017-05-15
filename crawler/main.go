@@ -13,6 +13,11 @@ import (
 	"time"
 )
 
+type Archive struct {
+	*ArchiveResult
+	Error string `json:"error,omitempty"`
+}
+
 type Site struct {
 	Href     string `json:"href"`
 	Coords   string `json:"coords"`
@@ -25,6 +30,7 @@ type Site struct {
 		Redirected string `json:"redirected,omitempty"`
 		Squatter   bool   `json:"squatter,omitempty"`
 	} `json:"response,omitempty"`
+	Archive *Archive `json:"archive,omitempty"`
 }
 
 // Records returns a CSV-compatible flat output
@@ -44,6 +50,7 @@ var skip = flag.Int("skip", 0, "skip this many lines before processing")
 var limit = flag.Int("limit", -1, "abort after processing this many lines")
 var concurrency = flag.Int("c", 1, "concurrency")
 var exportCSV = flag.Bool("csv", false, "export in csv format")
+var loadArchive = flag.Bool("archive", false, "load snapshot from archive.org")
 
 const maxReadSize = 262144
 
@@ -71,7 +78,18 @@ func main() {
 		*skip = 0
 	}
 
-	workers := make(chan struct{}, *concurrency)
+	archiveMutex := sync.Mutex{}
+	workers := make(chan worker, *concurrency)
+	for i := 0; i < *concurrency; i++ {
+		w := worker{
+			client: client,
+		}
+		if *loadArchive {
+			w.loadArchive = true
+			w.lockArchive = &archiveMutex
+		}
+		workers <- w
+	}
 	results := make(chan Site)
 	wait := sync.WaitGroup{}
 
@@ -88,8 +106,6 @@ func main() {
 	var i int
 	var s Site
 	for {
-		i++
-
 		if *limit > 0 && *limit <= i-*skip {
 			log.Printf("stopping early due to limit: %d (limit=%d, skip=%d)", i, *limit, *skip)
 			break
@@ -105,24 +121,52 @@ func main() {
 			continue
 		}
 
-		workers <- struct{}{}
+		w := <-workers
 		go func(s Site) {
 			wait.Add(1)
 			log.Printf("[%d] Processing %s", i, s.Href)
 
-			results <- process(client, s)
-			<-workers
+			results <- w.Process(s)
+			workers <- w
 		}(s)
+
+		i++
 	}
 
 	log.Printf("shutting down after line %d", i)
 	wait.Wait()
 	close(results)
+	close(workers)
 }
 
-// process takes a Site query and returns an augmented Site
-func process(client *http.Client, s Site) Site {
-	resp, err := client.Get(s.Href)
+type worker struct {
+	client      *http.Client
+	loadArchive bool
+	lockArchive sync.Locker
+}
+
+// Process takes a Site query and returns an augmented Site
+func (w *worker) Process(s Site) Site {
+	if !w.loadArchive {
+		w.lockArchive.Lock()
+
+		archive := ArchiveClient{w.client}
+		// The auction ended in Jan 2006, so we fetch archives after Feb
+		results, err := archive.History(s.Href, Param{"limit", "1"}, Param{"from", "200602"})
+		arch := &Archive{}
+		if err != nil {
+			arch.Error = err.Error()
+			log.Printf("archive error: %s", err)
+		} else if len(results) > 0 {
+			arch.ArchiveResult = &results[0]
+		} else {
+			arch = nil
+		}
+		s.Archive = arch
+		w.lockArchive.Unlock()
+	}
+
+	resp, err := w.client.Get(s.Href)
 	if err != nil {
 		s.Response.Error = err.Error()
 		return s
