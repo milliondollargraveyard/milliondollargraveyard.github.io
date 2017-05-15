@@ -163,7 +163,12 @@ func (w *worker) Process(s Site) Site {
 			arch = nil
 		}
 		s.Archive = arch
-		w.lockArchive.Unlock()
+
+		go func() {
+			// Archve.org gets upset if we hammer too aggressively
+			time.Sleep(time.Millisecond * 150)
+			w.lockArchive.Unlock()
+		}()
 	}
 
 	resp, err := w.client.Get(s.Href)
