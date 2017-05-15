@@ -147,7 +147,7 @@ type worker struct {
 
 // Process takes a Site query and returns an augmented Site
 func (w *worker) Process(s Site) Site {
-	if !w.loadArchive {
+	if w.loadArchive {
 		w.lockArchive.Lock()
 
 		archive := ArchiveClient{w.client}
