@@ -32,13 +32,13 @@ function colourByFilter(d) {
 
   } else if (activeFacet == 'domain') {
     if (d.response.squatter == true) {
+      return colorScale(colourRangeMax - 5000);
+    } else if (d.response.redirected) {
       return colorScale(colourRangeMax - 3000);
-    } else if (d.response.redirect) {
-      return '#00f';
     } else if (d.response.status == 200) {
       return colorScale(colourRangeMax);
     } else if (d.response.status >= 400) {
-      return colorScale(2000);
+      return colorScale(1000);
     } else if (d.response.error) {
       return colorScale(0);
     } else {
@@ -53,7 +53,7 @@ function colourByFilter(d) {
 function updateData(data) {
 
   rect = svg.selectAll("rect")
-    .data(data, function(d) { return d.coords; });
+    .data(data, function(d, i ) { return i; });
 
   rect.exit()
     .remove();
