@@ -65,7 +65,11 @@ function updateData(data) {
     .append('rect')
     .merge(rect)
       .on('mouseover', function(d) {
+        width = d.coords.split(",")[2] - d.coords.split(",")[0];
+        height = d.coords.split(",")[3] - d.coords.split(",")[1];
+        size = width * height;
         $('.tooltip .header').text(d.title);
+        $('.tooltip .meta').text("$" + size);
         $('.tooltip .description a').text(d.href);
         $('.tooltip .description a').attr('href', d.href);
       })
