@@ -9,10 +9,12 @@ let colorScale = d3.scaleLinear().domain([1,colourRangeMax])
 function changeFacet(facet) {
   activeFacet = facet;
   updateData(data);
+  $('#facet-menu .item').removeClass('active');
+  $('#facet-menu .item.' + facet).addClass('active');
 }
 
 function colourByFilter(d) {
-  if (activeFacet == 'none') {
+  if (activeFacet == 'original') {
     return 'rgba(0,0,0,0)'
 
   } else if (activeFacet == 'cost') {

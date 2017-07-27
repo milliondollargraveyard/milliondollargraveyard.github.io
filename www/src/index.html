@@ -19,24 +19,24 @@
     <div class='visualization'>
       <sidebar>
 
-        <div class="ui vertical menu fluid">
-          <a class="active item" onclick='changeFacet("none")'>
+        <div id='facet-menu' class="ui secondary vertical fluid pointing menu">
+          <a class="item original" onclick='changeFacet("original")'>
             <h4 class="ui header">Original</h4>
             <p>What did the ad look like?</p>
           </a>
-          <a class="active item" onclick='changeFacet("cost")'>
+          <a class="item cost active" onclick='changeFacet("cost")'>
             <h4 class="ui header">Cost</h4>
             <p>How much did each ad cost?</p>
           </a>
-          <a class="item" onclick='changeFacet("registration")'>
+          <a class="item registration" onclick='changeFacet("registration")'>
             <h4 class="ui header">Registration</h4>
             <p>What's the purchasing status of each ad?</p>
           </a>
-          <a class="item" onclick='changeFacet("domain")'>
+          <a class="item domain" onclick='changeFacet("domain")'>
             <h4 class="ui header">Domain</h4>
             <p>What's on the domain of ad now?</p>
           </a>
-          <a class="item" onclick='changeFacet("content")'>
+          <a class="item content" onclick='changeFacet("content")'>
             <h4 class="ui header">Content</h4>
             <p>Did the ad's content survive?</p>
           </a>
