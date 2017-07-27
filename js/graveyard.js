@@ -2,9 +2,11 @@ const svg = d3.select('svg');
 let activeFacet = 'domain';
 const colourRangeMax = 8000;
 
-const colorScale = d3.scaleLinear().domain([1,colourRangeMax])
+const colorScale = d3.scaleSqrt().domain([1,colourRangeMax])
   .interpolate(d3.interpolateHcl)
-  .range([d3.rgb("#f00"), d3.rgb('#0f0')]);
+  .range([d3.rgb("#fff"), d3.rgb('#2f2')]);
+
+const colorOrdinal = d3.scaleOrdinal(d3.schemeCategory10);
 
 function changeFacet(facet) {
   activeFacet = facet;
@@ -28,30 +30,30 @@ function colourByFilter(d) {
   } else if (activeFacet == 'registration') {
     $('.ad-grid').removeClass('coloured');
     if (d.title.toLowerCase().startsWith('reserved for')) {
-      return colorScale(colourRangeMax - 2000);
+      return colorOrdinal(colourRangeMax - 2000);
     }
     if (d.title == 'Pending Order') {
-      return colorScale(colourRangeMax - 5000);
+      return colorOrdinal(colourRangeMax - 5000);
     } else if (d.title == 'Link Suspended') {
-      return colorScale(0);
+      return colorOrdinal(0);
     } else {
-      return colorScale(colourRangeMax); 
+      return colorOrdinal(colourRangeMax); 
     }
 
   } else if (activeFacet == 'domain') {
     $('.ad-grid').removeClass('coloured');
     if (d.response.squatter == true) {
-      return colorScale(colourRangeMax - 5000);
+      return colorOrdinal(colourRangeMax - 5000);
     } else if (d.response.redirected) {
-      return colorScale(colourRangeMax - 3000);
+      return colorOrdinal(colourRangeMax - 3000);
     } else if (d.response.status == 200) {
-      return colorScale(colourRangeMax);
+      return colorOrdinal(colourRangeMax);
     } else if (d.response.status >= 400) {
-      return colorScale(1000);
+      return colorOrdinal(1000);
     } else if (d.response.error) {
-      return colorScale(0);
+      return colorOrdinal(0);
     } else {
-      return colorScale(0); 
+      return colorOrdinal(0); 
     }
 
   } else {
