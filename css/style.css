@@ -52,12 +52,17 @@ rect {
   opacity: 0.8;
 }
 
+
 .tooltip {
   z-index: 100;
   width: 250px;
   position: absolute;
   left: 0;
   word-wrap: break-word;
+  display: none;
+}
+.tooltip.active {
+  display: block;
 }
 
 

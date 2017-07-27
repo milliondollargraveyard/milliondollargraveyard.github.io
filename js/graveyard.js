@@ -1,8 +1,8 @@
-let svg = d3.select('svg');
-let activeFacet = 'cost';
+const svg = d3.select('svg');
+let activeFacet = 'domain';
 const colourRangeMax = 8000;
 
-let colorScale = d3.scaleLinear().domain([1,colourRangeMax])
+const colorScale = d3.scaleLinear().domain([1,colourRangeMax])
   .interpolate(d3.interpolateHcl)
   .range([d3.rgb("#f00"), d3.rgb('#0f0')]);
 
@@ -70,6 +70,9 @@ function updateData(data) {
   rect.enter()
     .append('rect')
     .merge(rect)
+      .on('dblclick', function(d) {
+        document.location = d.href;
+      })
       .on('mouseover', function(d) {
         width = d.coords.split(",")[2] - d.coords.split(",")[0];
         height = d.coords.split(",")[3] - d.coords.split(",")[1];
@@ -95,4 +98,13 @@ function updateData(data) {
 d3.json("data/data.json", function(d) {
   data = d;
   updateData(d);
+});
+
+$('document').ready(function(){
+  $('.ad-grid').on('mouseover', function() {
+    $('.tooltip').addClass('active');
+  })
+  $('.ad-grid').on('mouseout', function() {
+    $('.tooltip').removeClass('active');
+  })
 });
