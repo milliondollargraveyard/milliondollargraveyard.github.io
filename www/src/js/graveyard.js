@@ -15,15 +15,18 @@ function changeFacet(facet) {
 
 function colourByFilter(d) {
   if (activeFacet == 'original') {
+    $('.ad-grid').addClass('coloured');
     return 'rgba(0,0,0,0)'
 
   } else if (activeFacet == 'cost') {
+    $('.ad-grid').removeClass('coloured');
     width = d.coords.split(",")[2] - d.coords.split(",")[0];
     height = d.coords.split(",")[3] - d.coords.split(",")[1];
     size = width * height;
     return colorScale(size);
   
   } else if (activeFacet == 'registration') {
+    $('.ad-grid').removeClass('coloured');
     if (d.title.toLowerCase().startsWith('reserved for')) {
       return colorScale(colourRangeMax - 2000);
     }
@@ -36,6 +39,7 @@ function colourByFilter(d) {
     }
 
   } else if (activeFacet == 'domain') {
+    $('.ad-grid').removeClass('coloured');
     if (d.response.squatter == true) {
       return colorScale(colourRangeMax - 5000);
     } else if (d.response.redirected) {
