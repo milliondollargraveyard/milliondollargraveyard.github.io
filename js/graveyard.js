@@ -83,6 +83,7 @@ function updateData(data) {
           $('.tooltip').attr('style', "left: " + d.coords.split(",")[0] + "; top:" + d.coords.split(",")[1]);
           $('.tooltip .header').html(d.title);
           $('.tooltip .meta').text("$" + size);
+          $('.tooltip .status').text(status(d.response));
           $('.tooltip .description a').text(d.href);
           $('.tooltip .description a').attr('href', d.href);
         }
@@ -107,6 +108,16 @@ d3.json("data/data.json", function(d) {
   data = d;
   updateData(d);
 });
+
+function status(response) {
+  if (response.redirected) {
+    return "redirected";
+  } else if (response.error) {
+    return "error crawling";
+  } else {
+    return "code: " + response.status;
+  }
+}
 
 $('document').ready(function(){
   $('.ad-grid').on('mouseover', function() {
