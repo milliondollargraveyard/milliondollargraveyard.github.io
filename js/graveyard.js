@@ -74,14 +74,19 @@ function updateData(data) {
         document.location = d.href;
       })
       .on('mouseover', function(d) {
-        width = d.coords.split(",")[2] - d.coords.split(",")[0];
-        height = d.coords.split(",")[3] - d.coords.split(",")[1];
-        size = width * height;
-        $('.tooltip').attr('style', "left: " + d.coords.split(",")[0] + "; top:" + d.coords.split(",")[1]);
-        $('.tooltip .header').html(d.title);
-        $('.tooltip .meta').text("$" + size);
-        $('.tooltip .description a').text(d.href);
-        $('.tooltip .description a').attr('href', d.href);
+        if (!$('.tooltip').hasClass('sticky')) {
+          width = d.coords.split(",")[2] - d.coords.split(",")[0];
+          height = d.coords.split(",")[3] - d.coords.split(",")[1];
+          size = width * height;
+          $('.tooltip').attr('style', "left: " + d.coords.split(",")[0] + "; top:" + d.coords.split(",")[1]);
+          $('.tooltip .header').html(d.title);
+          $('.tooltip .meta').text("$" + size);
+          $('.tooltip .description a').text(d.href);
+          $('.tooltip .description a').attr('href', d.href);
+        }
+      })
+      .on('click', function(d) {
+        $('.tooltip').toggleClass('sticky');
       })
       .attr('x', function(d) { return d.coords.split(",")[0]; })
       .attr('x', function(d) { return d.coords.split(",")[0]; })
@@ -92,7 +97,8 @@ function updateData(data) {
       .attr('stroke', 'rgba(0,0,0,0.3')
       .transition()
       .duration(1000)
-      .attr('fill', colourByFilter);
+      .attr('fill', colourByFilter)
+      .style("cursor", "pointer")
 }
 
 d3.json("data/data.json", function(d) {
@@ -105,6 +111,8 @@ $('document').ready(function(){
     $('.tooltip').addClass('active');
   })
   $('.ad-grid').on('mouseout', function() {
-    $('.tooltip').removeClass('active');
+    if (!$('.tooltip').hasClass('sticky')) {
+      $('.tooltip').removeClass('active');
+    }
   })
 });
