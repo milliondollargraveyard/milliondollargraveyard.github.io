@@ -78,7 +78,7 @@ function updateData(data) {
         height = d.coords.split(",")[3] - d.coords.split(",")[1];
         size = width * height;
         $('.tooltip').attr('style', "left: " + d.coords.split(",")[0] + "; top:" + d.coords.split(",")[1]);
-        $('.tooltip .header').text(d.title);
+        $('.tooltip .header').html(d.title);
         $('.tooltip .meta').text("$" + size);
         $('.tooltip .description a').text(d.href);
         $('.tooltip .description a').attr('href', d.href);
