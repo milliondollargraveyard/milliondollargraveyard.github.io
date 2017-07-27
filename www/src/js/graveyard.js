@@ -78,6 +78,8 @@ function updateData(data) {
       .attr('width', function(d) { return d.coords.split(",")[2] - d.coords.split(",")[0]; })
       .attr('y', function(d) { return d.coords.split(",")[1]; })
       .attr('height', function(d) { return d.coords.split(",")[3] - d.coords.split(",")[1]; })
+      .attr('stroke-width', 1)
+      .attr('stroke', 'rgba(0,0,0,0.3')
       .transition()
       .duration(1000)
       .attr('fill', colourByFilter);
